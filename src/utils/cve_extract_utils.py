@@ -97,7 +97,8 @@ def extract_cve_json(cve_id):
         acceptable_metrics = ["cvssV3_0", "cvssV3", "cvssV3_1", "cvssV4_0"]
         matching_metrics = [metric for metric in cve_json["metrics"] if any([metric_type in metric for metric_type in acceptable_metrics])]
         if len(matching_metrics) > 0:
-            final_json["metrics"] = matching_metrics[0]
+            metric_key = [metric_type for metric_type in acceptable_metrics if metric_type in matching_metrics[0]][0]
+            final_json["metrics"] = matching_metrics[0][metric_key]
 
     return final_json
 

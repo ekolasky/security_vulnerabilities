@@ -74,10 +74,10 @@ def validate_filters(filter_params):
             if (parameter["data_type"] == "string-options"):
                 if not all([isinstance(val, str) for val in filter_param["included_range"].values()]):
                     errors.append(f"Max and min range values for {filter_param['parameter']} should both be strings.")
-                if (not all([val in parameter["options"] for val in filter_param["included_range"].values()])):
+                if (not all([val in parameter["possible_values"] for val in filter_param["included_range"].values()])):
                     errors.append(f"Max and min range values for {filter_param['parameter']} should be in the list of options.")
                 if ("min" in filter_param["included_range"] and "max" in filter_param["included_range"]):
-                    if (parameter["options"].index(filter_param["included_range"]["min"]) >= parameter["options"].index(filter_param["included_range"]["max"])):
+                    if (parameter["possible_values"].index(filter_param["included_range"]["min"]) >= parameter["possible_values"].index(filter_param["included_range"]["max"])):
                         errors.append(f"Min value for {filter_param['parameter']} should be less than max value.")
             
             # Handle iso8601
@@ -111,7 +111,7 @@ def validate_filters(filter_params):
 
             # Handle string-options
             if (parameter["data_type"] == "string-options"):
-                if (not all([val in parameter["options"] for val in filter_param["included_values"]])):
+                if (not all([val in parameter["possible_values"] for val in filter_param["included_values"]])):
                     errors.append(f"Values for {filter_param['parameter']} should be in the list of options.")
 
             # Handle string
@@ -158,7 +158,8 @@ def validate_sorts(sort_params):
     
     # Check that the parameter can be sorted
     for sort_param in sort_params:
-        if ("sort" not in parameters[sort_param["parameter"]]["accepted_operations"]):
+        parameter = [x for x in parameters if x["parameter"] == sort_param["parameter"]][0]
+        if ("sort" not in parameter["accepted_operations"]):
             errors.append(f"Parameter {sort_param['parameter']} cannot be sorted.")
 
     return errors

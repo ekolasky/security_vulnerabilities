@@ -21,7 +21,7 @@
         "data_type": "string-options",
         "nested_in": "metrics",
         "parent_type": "dict",
-        "possible_values": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+        "possible_values": ["LOW", "HIGH"],
         "accepted_operations": ["filter-range", "sort"]
     },
     {

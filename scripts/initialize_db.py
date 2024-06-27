@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
 
 from src.db_connection import get_db_connection
-from src.utils.cve_utils import extract_cve_json
+from src.utils.cve_extract_utils import extract_cve_json
 
 load_dotenv()
 
@@ -37,7 +37,7 @@ def upload_all_cves_to_mongo():
         "missing_affected_products": 0,
         "missing_metrics": 0
     }
-    for year_folder in [year_folders[-20]]:
+    for year_folder in [year_folders[-1]]:
 
         # Get all subfolders in year folder
         try:
@@ -92,7 +92,7 @@ def upload_all_cves_to_mongo():
             new_cve_jsons = [{k: v for k, v in cve_json.items() if v != None} for cve_json in new_cve_jsons]
 
             # Upload to MongoDB
-            # collection.insert_many(new_cve_jsons)
+            collection.insert_many(new_cve_jsons)
 
             print(f"Uploaded subfolder: {year_folder}/{subfolder}")
 

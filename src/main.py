@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 
-from .utils.search_utils import handle_nl_search
+from .utils.search_utils import handle_nl_search, retrieve_cves
 from .utils.search_validators import validate_filters, validate_sorts
 
 app = FastAPI()
@@ -87,7 +87,13 @@ async def search(request_body: SearchModel):
             return errors
 
         # Retrieve CVEs from MongoDB
-        # NEED TO IMPLEMENT
+        results = retrieve_cves(request_body.filter_params, request_body.sort_params, request_body.return_n, request_body.return_offset)
+
+        return {
+            'results': results,
+            'filter_params': request_body.filter_params,
+            'sort_params': request_body.sort_params
+        }
 
 
 
