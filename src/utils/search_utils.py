@@ -1,21 +1,22 @@
 from src.db_connection import get_db_connection
 from src.utils.mongo_queries import convert_filter_to_mongo_queries, convert_sort_to_mongo_queries, get_custom_sort_fields
+from src.utils.nl_search_utils import initial_request
 
 def handle_nl_search(query, return_n=100, return_offset=0):
     """
     This function takes a natural language search string and returns matching results along with filters and sorting parameters.
     """
 
-    # Recurrently correct model if json response doesn't match expected format
+    # Make initial model call with query
+    initial_request(query)
+
+    # Prompt model with function calling
+    # Run function json through validator
+    # Take errors and feed them back to model
+
+    # Once there's no errors, retrieve cves
 
 
-
-    pass
-
-def get_filters_and_sorts(query):
-    """
-    This function takes a natural language search string and returns a list of filters and sorting parameters.
-    """
 
     pass
 
