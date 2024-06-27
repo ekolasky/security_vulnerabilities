@@ -1,0 +1,90 @@
+[
+    {
+        "parameter": "cve_id",
+        "data_type": "string",
+        "accepted_operations": ["filter-value"]
+    },
+    {
+        "parameter": "date_public",
+        "data_type": "iso8601",
+        "accepted_operations": ["filter-range", "sort"]
+    },
+    {
+        "parameter": "product",
+        "data_type": "string",
+        "nested_in": "affected_products",
+        "parent_type": "list",
+        "accepted_operations": ["filter-value"]
+    },
+    {
+        "parameter": "attackComplexity",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+        "accepted_operations": ["filter-range", "sort"]
+    },
+    {
+        "parameter": "attackVector",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["NETWORK", "ADJACENT_NETWORK", "LOCAL", "PHYSICAL"],
+        "accepted_operations": ["filter-value"]
+    },
+    {
+        "parameter": "availabilityImpact",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["NONE", "LOW", "HIGH"],
+        "accepted_operations": ["filter-range", "sort"]
+    },
+    {
+        "parameter": "baseScore",
+        "data_type": "numeric",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "accepted_operations": ["filter-range", "sort"]
+    },
+    {
+        "parameter": "baseSeverity",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"],
+        "accepted_operations": ["filter-range", "sort"]
+    },
+    {
+        "parameter": "confidentialityImpact",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["NONE", "LOW", "HIGH"],
+        "accepted_operations": ["filter-range", "sort"]
+    },
+    {
+        "parameter": "privilegesRequired",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["NONE", "LOW", "HIGH"],
+        "accepted_operations": ["filter-range"]
+    },
+    {
+        "parameter": "scope",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["UNCHANGED", "CHANGED"],
+        "accepted_operations": ["filter-value"]
+    },
+    {
+        "parameter": "metrics.userInteraction",
+        "data_type": "string-options",
+        "nested_in": "metrics",
+        "parent_type": "dict",
+        "possible_values": ["NONE", "REQUIRED"],
+        "accepted_operations": ["filter-value"]
+    }
+]
