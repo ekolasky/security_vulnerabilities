@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import json
 
 load_dotenv()
-
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
@@ -175,7 +174,37 @@ def initial_request(query):
         temperature=0
     )
     print(chat_completion)
-    return "test"
+    print(chat_completion.choices[0].message.content)
 
-def reprompt_with_errors(query, errors):
-    pass
+    messages.append({
+        "role": "assistant",
+        "content": chat_completion.choices[0].message.content
+    })
+    return messages
+
+def reprompt_with_errors(messages, errors):
+    
+    prompt = ("I just ran your previous function call through a validator and got the following errors: \n\n" +
+        "\n".join(errors) +
+        "\n\nPlease return a new function call that corrects these errors."
+    )
+
+    messages.append({
+        "role": "user",
+        "content": prompt
+    })
+
+    chat_completion = client.chat.completions.create(
+        messages=messages,
+        model="gpt-4o",
+        max_tokens=200,
+        stop=None,
+        temperature=0
+    )
+
+    messages.append({
+        "role": "assistant",
+        "content": chat_completion.choices[0].message.content
+    })
+
+    return messages

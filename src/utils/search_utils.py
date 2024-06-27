@@ -1,6 +1,10 @@
+import json
+
 from src.db_connection import get_db_connection
 from src.utils.mongo_queries import convert_filter_to_mongo_queries, convert_sort_to_mongo_queries, get_custom_sort_fields
-from src.utils.nl_search_utils import initial_request
+from src.utils.nl_search_utils import initial_request, reprompt_with_errors
+from src.utils.search_validators import validate_filters, validate_sorts
+
 
 def handle_nl_search(query, return_n=100, return_offset=0):
     """
@@ -8,17 +12,49 @@ def handle_nl_search(query, return_n=100, return_offset=0):
     """
 
     # Make initial model call with query
-    initial_request(query)
+    messages = initial_request(query)
+    errors, json_response = _get_response_errors(messages[-1]['content'])
 
-    # Prompt model with function calling
-    # Run function json through validator
-    # Take errors and feed them back to model
+    # Reprompt to correct errors
+    i = 0
+    while len(errors) > 0 and i < 5:
+        print("Errors found in response. Reprompting...")
+        print(errors)
+        messages = reprompt_with_errors(messages, errors)
+        errors, json_response = _get_response_errors(messages[-1]['content'])
+        i += 1
 
-    # Once there's no errors, retrieve cves
+    if len(errors) == 0:
+        cves = retrieve_cves(json_response['filter_params'], json_response['sort_params'], return_n, return_offset)
+        return {**json_response, 'results': cves}
+    else:
+        return {'errors': errors}
+    
 
+def _get_response_errors(response):
 
+    try:
+        # Clean response
+        if response.startswith("```json"):
+            response = response[7:]
+        if response.endswith("```"):
+            response = response[:-3]
+        response = response.strip()
 
-    pass
+        json_response = json.loads(response)
+    except json.JSONDecodeError:
+        return (["Response from model is not valid JSON."], None)
+
+    # Check for errors
+    errors = []
+    if 'filter_params' not in json_response or 'sort_params' not in json_response:
+        errors.append('Either "filter_params" and "sort_params" must be provided, or "query" must be provided')
+    else:
+        errors += validate_filters(json_response['filter_params'])
+        errors += validate_sorts(json_response['sort_params'])
+    
+    return (errors, json_response)
+
 
 def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
     """

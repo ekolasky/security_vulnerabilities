@@ -75,8 +75,8 @@ def validate_filters(filter_params):
                 if not all([isinstance(val, str) for val in filter_param["included_range"].values()]):
                     errors.append(f"Max and min range values for {filter_param['parameter']} should both be strings.")
                 if (not all([val in parameter["possible_values"] for val in filter_param["included_range"].values()])):
-                    errors.append(f"Max and min range values for {filter_param['parameter']} should be in the list of options.")
-                if ("min" in filter_param["included_range"] and "max" in filter_param["included_range"]):
+                    errors.append(f"Max and min range values for {filter_param['parameter']} should be in the list of options.")                
+                if ("min" in filter_param["included_range"] and "max" in filter_param["included_range"] and len(errors) == 0):
                     if (parameter["possible_values"].index(filter_param["included_range"]["min"]) >= parameter["possible_values"].index(filter_param["included_range"]["max"])):
                         errors.append(f"Min value for {filter_param['parameter']} should be less than max value.")
             
