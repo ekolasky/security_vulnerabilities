@@ -58,7 +58,7 @@ def validate_filters(filter_params):
         parameter = [x for x in parameters if x["parameter"] == filter_param["parameter"]][0]
         if "included_range" in filter_param and "filter-range" not in parameter["accepted_operations"]:
             errors.append(f"Parameter {filter_param['parameter']} cannot be filtered by a range.")
-        if "included_values" in filter_param and "filter-values" not in parameter["accepted_operations"]:
+        if "included_values" in filter_param and "filter-value" not in parameter["accepted_operations"]:
             errors.append(f"Parameter {filter_param['parameter']} cannot be filtered by values.")
     if (len(errors) > 0):
         return errors
@@ -74,10 +74,11 @@ def validate_filters(filter_params):
             if (parameter["data_type"] == "string-options"):
                 if not all([isinstance(val, str) for val in filter_param["included_range"].values()]):
                     errors.append(f"Max and min range values for {filter_param['parameter']} should both be strings.")
-                if (not all([val in parameter["possible_values"] for val in filter_param["included_range"].values()])):
+                possible_vals = [val.lower() for val in parameter["possible_values"]]
+                if (not all([val.lower() in possible_vals for val in filter_param["included_range"].values()])):
                     errors.append(f"Max and min range values for {filter_param['parameter']} should be in the list of options.")                
                 if ("min" in filter_param["included_range"] and "max" in filter_param["included_range"] and len(errors) == 0):
-                    if (parameter["possible_values"].index(filter_param["included_range"]["min"]) >= parameter["possible_values"].index(filter_param["included_range"]["max"])):
+                    if (possible_vals.index(filter_param["included_range"]["min"].lower()) >= possible_vals.index(filter_param["included_range"]["max"].lower())):
                         errors.append(f"Min value for {filter_param['parameter']} should be less than max value.")
             
             # Handle iso8601
@@ -109,9 +110,14 @@ def validate_filters(filter_params):
         # Handle included_values
         if "included_values" in filter_param:
 
+            # Check if there are multiple duplicate values
+            if (len(filter_param["included_values"]) != len(set(filter_param["included_values"]))):
+                errors.append(f"Values for {filter_param['parameter']} should not contain duplicates.")
+
             # Handle string-options
             if (parameter["data_type"] == "string-options"):
-                if (not all([val in parameter["possible_values"] for val in filter_param["included_values"]])):
+                possible_vals = [val.lower() for val in parameter["possible_values"]]
+                if (not all([val.lower() in possible_vals for val in filter_param["included_values"]])):
                     errors.append(f"Values for {filter_param['parameter']} should be in the list of options.")
 
             # Handle string

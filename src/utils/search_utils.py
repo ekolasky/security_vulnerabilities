@@ -21,6 +21,7 @@ def handle_nl_search(query, return_n=100, return_offset=0):
         print("Errors found in response. Reprompting...")
         print(errors)
         messages = reprompt_with_errors(messages, errors)
+        print(messages[-1]['content'])
         errors, json_response = _get_response_errors(messages[-1]['content'])
         i += 1
 
@@ -65,6 +66,10 @@ def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
     mongo_sorts = convert_sort_to_mongo_queries(sort_params)
     print(mongo_filters)
 
+    # If no sorts are provided, default to sorting by date
+    if (len(mongo_sorts) == 0):
+        mongo_sorts = {"date_public": -1}
+
     db = get_db_connection()
     collection = db['cve']
 
@@ -75,12 +80,18 @@ def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
     
     # Create pipeline from filters and sorts
     pipeline = [
-        {"$addFields": custom_sort_fields},
-        {"$match": {"$and": mongo_filters}},
-        {"$sort": mongo_sorts},  # Adjust 1 to -1 to reverse the order
+        {"$addFields": custom_sort_fields}
+    ]
+
+    if len(mongo_filters) > 0:
+        print(mongo_filters)
+        pipeline.append({"$match": {"$and": mongo_filters}})
+
+    pipeline += [
+        {"$sort": mongo_sorts},
         {"$skip": return_offset},
         {"$limit": return_n},
-        {"$project": {k: 0 for k in custom_sort_fields.keys()}}  # Optionally remove the customSortField from the results
+        {"$project": {k: 0 for k in custom_sort_fields.keys()}}
     ]
 
     results = list(collection.aggregate(pipeline))
@@ -95,5 +106,3 @@ def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
             result['_id'] = str(result['_id'])
 
     return results
-
-

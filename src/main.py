@@ -4,6 +4,7 @@ vulnerabilities from those websites. The API allows the user to see a feed of th
 """
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 
@@ -77,14 +78,14 @@ async def search(request_body: SearchModel):
         
         return output
     
-    elif (request_body.filter_params):
+    else:
         # Validate filter_params and sort_params
         errors = []
         errors += validate_filters(request_body.filter_params)
         errors += validate_sorts(request_body.sort_params)
 
         if (len(errors) > 0):
-            return errors
+            return JSONResponse(status_code=400, content={"errors": errors})
 
         # Retrieve CVEs from MongoDB
         results = retrieve_cves(request_body.filter_params, request_body.sort_params, request_body.return_n, request_body.return_offset)

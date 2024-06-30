@@ -23,8 +23,9 @@ def convert_filter_to_mongo_queries(filter_params):
 
         # Handle range query when parameter is a string with possible values
         if "included_range" in filter_param and parameter["data_type"] == "string-options":
-            min_index = parameter["possible_values"].index(filter_param["included_range"]["min"]) if "min" in filter_param["included_range"] else None
-            max_index = parameter["possible_values"].index(filter_param["included_range"]["max"]) if "max" in filter_param["included_range"] else None
+            possible_vals = [val.lower() for val in parameter["possible_values"]]
+            min_index = possible_vals.index(filter_param["included_range"]["min"].lower()) if "min" in filter_param["included_range"] else None
+            max_index = possible_vals.index(filter_param["included_range"]["max"].lower()) if "max" in filter_param["included_range"] else None
             included_values = parameter["possible_values"][min_index:max_index+1] if max_index is not None else parameter["possible_values"][min_index:]
             inner_query = {
                 "attribute": filter_param["parameter"],
@@ -35,30 +36,66 @@ def convert_filter_to_mongo_queries(filter_params):
         
         # Handle range query when parameter is a date
         elif "included_range" in filter_param and parameter["data_type"] == "iso8601":
-            inner_query = {
-                "attribute": filter_param["parameter"],
-                "value": {
-                    "$gte": filter_param["included_range"]["min"] if "min" in filter_param["included_range"] else None,
-                    "$lte": filter_param["included_range"]["max"] if "max" in filter_param["included_range"] else None
+            if "min" in filter_param["included_range"]:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$gte": filter_param["included_range"]["min"]
+                    }
                 }
-            }
+            elif "max" in filter_param["included_range"]:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$lte": filter_param["included_range"]["max"]
+                    }
+                }
 
         # Handle range query when parameter is a number
         elif "included_range" in filter_param and parameter["data_type"] == "number":
-            inner_query = {
-                "attribute": filter_param["parameter"],
-                "value": {
-                    "$gte": filter_param["included_range"]["min"] if "min" in filter_param["included_range"] else None,
-                    "$lte": filter_param["included_range"]["max"] if "max" in filter_param["included_range"] else None
+            if "min" in filter_param["included_range"]:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$gte": filter_param["included_range"]["min"]
+                    }
                 }
-            }
+            elif "max" in filter_param["included_range"]:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$lte": filter_param["included_range"]["max"]
+                    }
+                }
 
         # Handle values query when filter_param is a string
-        elif "included_values" in filter_param:
+        elif "included_values" in filter_param and parameter["data_type"] == "string":
+            if (parameter["substring_search"]):
+                inner_query = [
+                    {
+                        "attribute": filter_param["parameter"],
+                        "value": {
+                            "$regex": f".*{val}.*",
+                            "$options": "i"
+                        }
+                    } for val in filter_param["included_values"]
+                ]
+            else:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$in": filter_param["included_values"]
+                    }
+                }
+
+        # Handle values query when filter_param is a string-options
+        elif "included_values" in filter_param and parameter["data_type"] == "string-options":
+            possible_vals = [val.lower() for val in filter_param["included_values"]]
+            included_values = [val for val in parameter["possible_values"] if val.lower() in possible_vals]
             inner_query = {
                 "attribute": filter_param["parameter"],
                 "value": {
-                    "$in": filter_param["included_values"]
+                    "$in": included_values
                 }
             }
 
@@ -68,9 +105,9 @@ def convert_filter_to_mongo_queries(filter_params):
         # Handle nesting
         if "nested_in" in parameter and parameter["parent_type"] == "list":
             mongo_query = {
-                parameter['nested_in']: {
-                    "$elemMatch": inner_query
-                }
+                "$or": [
+                    {f"{parameter['nested_in']}.{elem['attribute']}": elem["value"]} for elem in inner_query
+                ]
             }
         elif "nested_in" in parameter and parameter["parent_type"] == "dict":
             mongo_query = {
