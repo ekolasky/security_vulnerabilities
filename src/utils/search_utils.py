@@ -18,10 +18,7 @@ def handle_nl_search(query, return_n=100, return_offset=0):
     # Reprompt to correct errors
     i = 0
     while len(errors) > 0 and i < 5:
-        print("Errors found in response. Reprompting...")
-        print(errors)
         messages = reprompt_with_errors(messages, errors)
-        print(messages[-1]['content'])
         errors, json_response = _get_response_errors(messages[-1]['content'])
         i += 1
 
@@ -36,15 +33,15 @@ def _get_response_errors(response):
 
     try:
         # Clean response
-        if response.startswith("```json"):
-            response = response[7:]
+        if "```json" in response:
+            response = response.split("```json")[1]
         if response.endswith("```"):
             response = response[:-3]
         response = response.strip()
-
         json_response = json.loads(response)
+
     except json.JSONDecodeError:
-        return (["Response from model is not valid JSON."], None)
+        return (["Please return a JSON function call that searches the database to answer the user's search."], None)
 
     # Check for errors
     errors = []
@@ -64,7 +61,6 @@ def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
 
     mongo_filters = convert_filter_to_mongo_queries(filter_params)
     mongo_sorts = convert_sort_to_mongo_queries(sort_params)
-    print(mongo_filters)
 
     # If no sorts are provided, default to sorting by date
     if (len(mongo_sorts) == 0):
@@ -76,7 +72,6 @@ def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
 
     # Define custom sort order
     custom_sort_fields = get_custom_sort_fields(sort_params)
-    print(mongo_sorts)
     
     # Create pipeline from filters and sorts
     pipeline = [
@@ -84,9 +79,9 @@ def retrieve_cves(filter_params, sort_params, return_n=100, return_offset=0):
     ]
 
     if len(mongo_filters) > 0:
-        print(mongo_filters)
         pipeline.append({"$match": {"$and": mongo_filters}})
 
+    print(mongo_sorts)
     pipeline += [
         {"$sort": mongo_sorts},
         {"$skip": return_offset},

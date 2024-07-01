@@ -41,10 +41,15 @@ class SearchModel(BaseModel):
     @classmethod
     def check_integers(cls, values):
         return_n, return_offset = values.get('return_n'), values.get('return_offset')
+
         if return_n is not None and not isinstance(return_n, int):
-            raise TypeError(f'{return_n} must be an integer')
+            raise ValueError(f'"return_n" must be an integer')
+        if return_n is not None and (return_n <= 0 or return_n > 100):
+            raise ValueError('return_n must be between 1 and 100')
         if return_offset is not None and not isinstance(return_offset, int):
-            raise TypeError(f'{return_offset} must be an integer')
+            raise ValueError(f'"return_offset" must be an integer')
+        if return_offset is not None and return_offset < 0:
+            raise ValueError('return_offset must be greater than or equal to 0')
         return values
 
 """
@@ -85,7 +90,7 @@ async def search(request_body: SearchModel):
         errors += validate_sorts(request_body.sort_params)
 
         if (len(errors) > 0):
-            return JSONResponse(status_code=400, content={"errors": errors})
+            return JSONResponse(status_code=422, content={"errors": errors})
 
         # Retrieve CVEs from MongoDB
         results = retrieve_cves(request_body.filter_params, request_body.sort_params, request_body.return_n, request_body.return_offset)

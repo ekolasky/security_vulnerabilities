@@ -53,6 +53,11 @@ def validate_filters(filter_params):
         errors.append("Filter parameters need to be included in list of possible parameters.")
         return errors
     
+    # Check for duplicate parameters
+    if (len(filter_params) != len(set([filter_param["parameter"] for filter_param in filter_params]))):
+        errors.append("Filter parameters should not contain duplicates.")
+        return errors
+    
     # Check that "included_range" or "included_values" is valid for that parameter
     for filter_param in filter_params:
         parameter = [x for x in parameters if x["parameter"] == filter_param["parameter"]][0]
@@ -103,6 +108,7 @@ def validate_filters(filter_params):
             if (parameter["data_type"] == "numeric"):
                 if not all([isinstance(val, (int, float)) for val in filter_param["included_range"].values()]):
                     errors.append(f"Max and min range values for {filter_param['parameter']} should both be numeric.")
+                    return errors
                 if ("min" in filter_param["included_range"] and "max" in filter_param["included_range"]):
                     if (filter_param["included_range"]["min"] >= filter_param["included_range"]["max"]):
                         errors.append(f"Min value for {filter_param['parameter']} should be less than max value.")
@@ -150,6 +156,10 @@ def validate_sorts(sort_params):
         errors.append("Sort parameters 'direction' should be a string.")
     if (len(errors) > 0):
         return errors
+    
+    # Check for duplicate parameters
+    if (len(sort_params) != len(set([sort_param["parameter"] for sort_param in sort_params]))):
+        errors.append("Sort parameters should not contain duplicates.")
     
     # Check that directions are either "low" or "high"
     if any([sort_param["direction"] not in ["low", "high"] for sort_param in sort_params]):

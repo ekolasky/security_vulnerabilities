@@ -1,0 +1,32 @@
+[
+    {
+        "query": "What are some high severity vulnerabilities that affect windows systems?"
+    },
+    {
+        "query": "Recent vulnerabilities in the Linux kernel"
+    },
+    {
+        "query": "What are some easy exploits for apple computers?"
+    },
+    {
+        "query": "Give me a list of the most significant vulnerabilities in the last three months"
+    },
+    {
+        "query": "Network vulnerabilities that pose a privacy risk"
+    },
+    {
+        "query": "What are some recently discovered vulnerabilities that require no privileges to exploit?"
+    },
+    {
+        "query": "Give me vulnerabilities that don't require a change in scope"
+    },
+    {
+        "query": "Vulnerabilities that affect old linux systems"
+    },
+    {
+        "query": "Are there any known exploits that affect Heroku servers?"
+    },
+    {
+        "query": "What is a SQL injection vulnerability?"
+    }
+]

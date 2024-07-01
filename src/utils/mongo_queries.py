@@ -13,7 +13,6 @@ def convert_filter_to_mongo_queries(filter_params):
     # Iterate through all filter params
     mongo_queries = []
     for filter_param in filter_params:
-        print(filter_param)
 
         # Find the parameter in the parameters list
         parameter = [x for x in parameters if x["parameter"] == filter_param["parameter"]][0]
@@ -36,11 +35,12 @@ def convert_filter_to_mongo_queries(filter_params):
         
         # Handle range query when parameter is a date
         elif "included_range" in filter_param and parameter["data_type"] == "iso8601":
-            if "min" in filter_param["included_range"]:
+            if "min" in filter_param["included_range"] and "max" in filter_param["included_range"]:
                 inner_query = {
                     "attribute": filter_param["parameter"],
                     "value": {
-                        "$gte": filter_param["included_range"]["min"]
+                        "$gte": filter_param["included_range"]["min"],
+                        "$lte": filter_param["included_range"]["max"]
                     }
                 }
             elif "max" in filter_param["included_range"]:
@@ -48,16 +48,24 @@ def convert_filter_to_mongo_queries(filter_params):
                     "attribute": filter_param["parameter"],
                     "value": {
                         "$lte": filter_param["included_range"]["max"]
+                    }
+                }
+            elif "min" in filter_param["included_range"]:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$gte": filter_param["included_range"]["min"]
                     }
                 }
 
         # Handle range query when parameter is a number
-        elif "included_range" in filter_param and parameter["data_type"] == "number":
-            if "min" in filter_param["included_range"]:
+        elif "included_range" in filter_param and parameter["data_type"] == "numeric":
+            if "min" in filter_param["included_range"] and "max" in filter_param["included_range"]:
                 inner_query = {
                     "attribute": filter_param["parameter"],
                     "value": {
-                        "$gte": filter_param["included_range"]["min"]
+                        "$gte": filter_param["included_range"]["min"],
+                        "$lte": filter_param["included_range"]["max"]
                     }
                 }
             elif "max" in filter_param["included_range"]:
@@ -65,12 +73,19 @@ def convert_filter_to_mongo_queries(filter_params):
                     "attribute": filter_param["parameter"],
                     "value": {
                         "$lte": filter_param["included_range"]["max"]
+                    }
+                }
+            elif "min" in filter_param["included_range"]:
+                inner_query = {
+                    "attribute": filter_param["parameter"],
+                    "value": {
+                        "$gte": filter_param["included_range"]["min"]
                     }
                 }
 
         # Handle values query when filter_param is a string
         elif "included_values" in filter_param and parameter["data_type"] == "string":
-            if (parameter["substring_search"]):
+            if ("substring_search" in parameter and parameter["substring_search"]):
                 inner_query = [
                     {
                         "attribute": filter_param["parameter"],
@@ -98,8 +113,6 @@ def convert_filter_to_mongo_queries(filter_params):
                     "$in": included_values
                 }
             }
-
-
 
 
         # Handle nesting
@@ -143,7 +156,10 @@ def convert_sort_to_mongo_queries(sort_params):
             mongo_sort = (f"{sort_param['parameter']}CustomSort", -1 if sort_param["direction"] == "high" else 1)
         # If parameter is iso8601 or numeric
         else:
-            mongo_sort = (sort_param["parameter"], -1 if sort_param["direction"] == "high" else 1)
+            if "nested_in" in parameter:
+                mongo_sort = (f"{parameter['nested_in']}.{sort_param['parameter']}", -1 if sort_param["direction"] == "high" else 1)
+            else:
+                mongo_sort = (sort_param["parameter"], -1 if sort_param["direction"] == "high" else 1)
 
         mongo_sorts[mongo_sort[0]] = mongo_sort[1]
 
@@ -165,7 +181,10 @@ def get_custom_sort_fields(sort_params=[]):
         # Get branches for param
         branches = []
         for idx, option in enumerate(param["possible_values"]):
-            branches.append({"case": {"$eq": [f"${param['parameter']}", option]}, "then": idx + 1})
+            if "nested_in" in param:
+                branches.append({"case": {"$eq": [f"${param['nested_in']}.{param['parameter']}", option]}, "then": idx + 1})
+            else:
+                branches.append({"case": {"$eq": [f"${param['parameter']}", option]}, "then": idx + 1})
 
         # Set default based on sort direction
         sort_param = [x for x in sort_params if x["parameter"] == param["parameter"]]

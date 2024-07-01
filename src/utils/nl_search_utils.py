@@ -77,8 +77,7 @@ Function Call:
         {
             "parameter": "date_public",
             "included_range": {
-                "min": "2022-01-01",
-                "max": "2022-03-01"
+                "min": "2024-04-01T00:00:00Z",
             }
         }
     ],
@@ -89,9 +88,9 @@ Function Call:
         }
     ]
 }
-
-I will now give you the user's query. Please return the function call to filter the database below. Here is the user's query:
 """
+"I will now give you the user's query. Please return the function call to filter the database below. For reference the current "+
+"date is 06/30/2024. Here is the user's query: "
 )
 
 reprompt_template = """
@@ -173,8 +172,6 @@ def initial_request(query):
         stop=None,
         temperature=0
     )
-    print(chat_completion)
-    print(chat_completion.choices[0].message.content)
 
     messages.append({
         "role": "assistant",
