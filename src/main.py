@@ -25,7 +25,7 @@ Periodically check CVE GitHub repositories for new CVEs and add them to the data
 async def lifespan(app:FastAPI):
     print("Starting scheduler")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(update_database, "interval", seconds=30)
+    scheduler.add_job(update_database, "interval", minutes=10)
     scheduler.start()
     update_database()
     yield
