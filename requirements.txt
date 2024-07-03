@@ -1,0 +1,8 @@
+requests
+python-dotenv
+pymongo
+openai
+fastapi
+pydantic
+apscheduler
+uvicorn
