@@ -5,13 +5,36 @@ vulnerabilities from those websites. The API allows the user to see a feed of th
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field, model_validator
 from typing import Optional
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
 
 from .utils.search_utils import handle_nl_search, retrieve_cves
 from .utils.search_validators import validate_filters, validate_sorts
+from .utils.update_database import update_database
 
-app = FastAPI()
+"""
+Periodically check CVE GitHub repositories for new CVEs and add them to the database.
+"""
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    print("Starting scheduler")
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(update_database, "interval", seconds=30)
+    scheduler.start()
+    update_database()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+scheduler = AsyncIOScheduler()
+
+
 
 # Get request for testing
 @app.get("/")
@@ -19,6 +42,9 @@ def read_root():
     return {"message": "Welcome to the Alaris Vulnerabilities Feed API!"}
 
 
+"""
+Validator for Search Endpoint
+"""
 # Validate search request
 class SearchModel(BaseModel):
     filter_params: Optional[list] = None
